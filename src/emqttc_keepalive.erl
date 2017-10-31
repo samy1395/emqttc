@@ -59,8 +59,8 @@ new({Socket, StatName}, TimeoutSec, TimeoutMsg) when TimeoutSec > 0 ->
 -spec start(keepalive()) -> {ok, keepalive()} | {error, any()}.
 start(undefined) ->
     {ok, undefined};
-start(KeepAlive = #keepalive{socket = Socket, stat_name = StatName, 
-                             timeout_sec = TimeoutSec, 
+start(KeepAlive = #keepalive{socket = Socket, stat_name = StatName,
+                             timeout_sec = TimeoutSec,
                              timeout_msg = TimeoutMsg}) ->
     case emqttc_socket:getstat(Socket, [StatName]) of
         {ok, [{StatName, StatVal}]} ->
@@ -75,7 +75,7 @@ start(KeepAlive = #keepalive{socket = Socket, stat_name = StatName,
 restart(KeepAlive) -> start(KeepAlive).
 
 %% @doc Resume KeepAlive, called when timeout.
--spec resume(keepalive()) -> timeout | {resumed, keepalive()} | {error, any()}.
+-spec resume(keepalive()) -> timeout | {error, any()}.
 resume(undefined) -> undefined;
 resume(KeepAlive = #keepalive{socket      = Socket,
                               stat_name   = StatName,
@@ -83,19 +83,8 @@ resume(KeepAlive = #keepalive{socket      = Socket,
                               timeout_sec = TimeoutSec,
                               timeout_msg = TimeoutMsg,
                               timer_ref   = Ref}) ->
-    case emqttc_socket:getstat(Socket, [StatName]) of
-        {ok, [{StatName, NewStatVal}]} ->
-            if
-                NewStatVal =:= StatVal ->
-                    timeout;
-                true ->
-                    cancel(Ref), %need?
-                    NewRef = erlang:send_after(TimeoutSec*1000, self(), TimeoutMsg),
-                    {resumed, KeepAlive#keepalive{stat_val = NewStatVal, timer_ref = NewRef}}
-            end;
-        {error, Error} ->
-            {error, Error}
-    end.
+    timeout.
+
 
 %% @doc Cancel KeepAlive.
 -spec cancel(keepalive() | reference()) -> any().
@@ -105,4 +94,3 @@ cancel(#keepalive{timer_ref = Ref}) ->
     cancel(Ref);
 cancel(Ref) when is_reference(Ref)->
     catch erlang:cancel_timer(Ref).
-
