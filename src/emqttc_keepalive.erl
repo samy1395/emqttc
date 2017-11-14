@@ -83,19 +83,7 @@ resume(KeepAlive = #keepalive{socket      = Socket,
                               timeout_sec = TimeoutSec,
                               timeout_msg = TimeoutMsg,
                               timer_ref   = Ref}) ->
-    case emqttc_socket:getstat(Socket, [StatName]) of
-        {ok, [{StatName, NewStatVal}]} ->
-            if
-                NewStatVal =:= StatVal ->
-                    timeout;
-                true ->
-                    cancel(Ref), %need?
-                    NewRef = erlang:send_after(TimeoutSec*1000, self(), TimeoutMsg),
-                    {resumed, KeepAlive#keepalive{stat_val = NewStatVal, timer_ref = NewRef}}
-            end;
-        {error, Error} ->
-            {error, Error}
-    end.
+    timeout.
 
 %% @doc Cancel KeepAlive.
 -spec cancel(keepalive() | reference()) -> any().
